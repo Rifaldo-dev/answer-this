@@ -69,8 +69,8 @@
     <div class="container">
         <h1>Answer This</h1>
         <input type="text" id="senderName" placeholder="Nama Anda" required>
+        <input type="text" id="contact" placeholder="Nomor WA atau Username Telegram" required>
         <input type="text" id="question" placeholder="Pertanyaan" required>
-        <input type="text" id="waNumber" placeholder="Nomor WA atau Username Telegram" required>
         <input type="text" id="yesResponse" placeholder="Pesan Yes" required>
         <input type="text" id="noResponse" placeholder="Pesan No" required>
         <button onclick="generateLink()">Generate Link</button>
@@ -84,8 +84,8 @@
         <p id="senderMessage"></p>
         <div id="questionContainer">
             <p id="generatedQuestion"></p>
-            <button id="yesButton" onclick="showYesResponse()">Yes</button>
-            <button id="noButton" onclick="showNoResponse()">No</button>
+            <button id="yesButton" onclick="handleResponse('yes')">Yes</button>
+            <button id="noButton" onclick="handleResponse('no')">No</button>
         </div>
     </div>
     <footer>
@@ -93,20 +93,26 @@
         <button onclick="window.location.href='index.html'">Buat Versi Kamu</button>
     </footer>
     <script>
+        let noClickCount = 0;
+
         function generateLink() {
             const senderName = document.getElementById('senderName').value;
+            const contact = document.getElementById('contact').value;
             const question = document.getElementById('question').value;
-            const waNumber = document.getElementById('waNumber').value;
             const yesResponse = document.getElementById('yesResponse').value;
             const noResponse = document.getElementById('noResponse').value;
 
-            const encodedQuestion = encodeURIComponent(question);
-            const encodedYesResponse = encodeURIComponent(yesResponse);
-            const encodedNoResponse = encodeURIComponent(noResponse);
-            const encodedSenderName = encodeURIComponent(senderName);
+            const params = new URLSearchParams({
+                senderName,
+                contact,
+                question,
+                yesResponse,
+                noResponse
+            }).toString();
 
-            const link = `${window.location.origin}${window.location.pathname}?q=${encodedQuestion}&y=${encodedYesResponse}&n=${encodedNoResponse}&s=${encodedSenderName}&wa=${waNumber}`;
-            
+            const encodedParams = btoa(params);
+            const link = `${window.location.origin}${window.location.pathname}?data=${encodedParams}`;
+
             document.getElementById('message').textContent = `Link telah di-generate!`;
             document.getElementById('link').textContent = link;
             document.getElementById('linkContainer').classList.remove('hidden');
@@ -120,35 +126,58 @@
         }
 
         function getQueryParams() {
-            const params = new URLSearchParams(window.location.search);
-            return {
-                question: params.get('q'),
-                yesResponse: params.get('y'),
-                noResponse: params.get('n'),
-                senderName: params.get('s'),
-                waNumber: params.get('wa')
-            };
+            const urlParams = new URLSearchParams(window.location.search);
+            const encodedParams = urlParams.get('data');
+            if (encodedParams) {
+                const decodedParams = atob(encodedParams);
+                const params = new URLSearchParams(decodedParams);
+                return {
+                    senderName: params.get('senderName'),
+                    contact: params.get('contact'),
+                    question: params.get('question'),
+                    yesResponse: params.get('yesResponse'),
+                    noResponse: params.get('noResponse')
+                };
+            }
+            return null;
         }
 
-        function showYesResponse() {
-            const params = getQueryParams();
-            alert(params.yesResponse);
-            const message = `Saya menjawab "Yes" untuk pertanyaanmu: "${params.question}"`;
-            if (params.waNumber.startsWith('@')) {
-                window.open(`https://t.me/${params.waNumber.slice(1)}?text=${encodeURIComponent(message)}`, '_blank');
+        function sendMessage(platform, contact, message) {
+            if (platform === 'telegram') {
+                window.open(`https://t.me/${contact.slice(1)}?text=${encodeURIComponent(message)}`, '_blank');
             } else {
-                window.open(`https://wa.me/${params.waNumber}?text=${encodeURIComponent(message)}`, '_blank');
+                window.open(`https://wa.me/${contact}?text=${encodeURIComponent(message)}`, '_blank');
             }
         }
 
-        function showNoResponse() {
+        function handleResponse(responseType) {
             const params = getQueryParams();
-            alert(params.noResponse);
+            if (!params) return;
+
+            let message;
+            if (responseType === 'yes') {
+                message = params.yesResponse;
+            } else {
+                noClickCount++;
+                if (noClickCount >= 2) {
+                    alert(params.yesResponse);
+                    return;
+                } else {
+                    message = params.noResponse;
+                }
+            }
+
+            const reportMessage = `Saya menjawab "${responseType === 'yes' ? 'Yes' : 'No'}" untuk pertanyaanmu: "${params.question}"`;
+            if (params.contact.startsWith('@')) {
+                sendMessage('telegram', params.contact, reportMessage);
+            } else {
+                sendMessage('whatsapp', params.contact, reportMessage);
+            }
         }
 
         window.onload = function() {
             const params = getQueryParams();
-            if (params.question) {
+            if (params) {
                 document.querySelector('.container').classList.add('hidden');
                 document.getElementById('senderMessage').textContent = `Ada pesan dari ${params.senderName}:`;
                 document.getElementById('generatedQuestion').textContent = params.question;
@@ -157,5 +186,5 @@
         }
     </script>
 </body>
-  </html>
-  
+    </html>
+    
