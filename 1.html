@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Answer This</title>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Press Start 2P', cursive;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #000;
+            color: #fff;
+        }
+
+        .container, .question-container {
+            text-align: center;
+            background-color: #222;
+            padding: 20px;
+            border: 2px solid #444;
+            box-shadow: 0 0 10px rgba(255, 0, 0, 0.5);
+            border-radius: 8px;
+            width: 90%;
+            max-width: 400px;
+            margin-top: 20px;
+        }
+
+        input, button {
+            font-family: 'Press Start 2P', cursive;
+            background-color: #444;
+            color: #fff;
+            border: 2px solid #666;
+            padding: 10px;
+            margin-top: 10px;
+            width: calc(100% - 24px);
+            border-radius: 4px;
+        }
+
+        #link {
+            word-break: break-all;
+            white-space: normal;
+            padding: 10px;
+            background-color: #333;
+            border: 2px solid #555;
+            border-radius: 4px;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        footer {
+            margin-top: 20px;
+            font-size: 12px;
+        }
+
+        footer a {
+            color: #3498db;
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Answer This</h1>
+        <input type="text" id="senderName" placeholder="Nama Anda" required>
+        <input type="text" id="question" placeholder="Pertanyaan" required>
+        <input type="text" id="contact" placeholder="Nomor WA atau Username Telegram" required>
+        <input type="text" id="yesResponse" placeholder="Pesan Yes" required>
+        <input type="text" id="noResponse" placeholder="Pesan No" required>
+        <button onclick="generateLink()">Generate Link</button>
+        <div id="linkContainer" class="hidden">
+            <p id="message"></p>
+            <div id="link"></div>
+            <button onclick="copyLink()">Salin Link</button>
+        </div>
+    </div>
+    <div id="resultContainer" class="hidden">
+        <p id="senderMessage"></p>
+        <div id="questionContainer">
+            <p id="generatedQuestion"></p>
+            <button id="yesButton" onclick="handleResponse('yes')">Yes</button>
+            <button id="noButton" onclick="handleResponse('no')">No</button>
+        </div>
+    </div>
+    <footer>
+        Made with by Aldo
+        <button onclick="window.location.href='index.html'">Buat Versi Kamu</button>
+    </footer>
+    <script>
+        function generateLink() {
+            const senderName = document.getElementById('senderName').value;
+            const question = document.getElementById('question').value;
+            const contact = document.getElementById('contact').value;
+            const yesResponse = document.getElementById('yesResponse').value;
+            const noResponse = document.getElementById('noResponse').value;
+
+            const params = new URLSearchParams({
+                q: question,
+                y: yesResponse,
+                n: noResponse,
+                s: senderName,
+                c: contact
+            }).toString();
+
+            const link = `${window.location.origin}${window.location.pathname}?${btoa(params)}`;
+            
+            document.getElementById('message').textContent = `Link telah di-generate!`;
+            document.getElementById('link').textContent = link;
+            document.getElementById('linkContainer').classList.remove('hidden');
+        }
+
+        function copyLink() {
+            const link = document.getElementById('link').textContent;
+            navigator.clipboard.writeText(link).then(() => {
+                alert('Link disalin ke clipboard');
+            });
+        }
+
+        function getQueryParams() {
+            const query = window.location.search.substring(1);
+            try {
+                const params = new URLSearchParams(atob(query));
+                return {
+                    question: params.get('q'),
+                    yesResponse: params.get('y'),
+                    noResponse: params.get('n'),
+                    senderName: params.get('s'),
+                    contact: params.get('c')
+                };
+            } catch (error) {
+                return null;
+            }
+        }
+
+        function sendMessage(platform, contact, message) {
+            if (platform === 'telegram') {
+                window.open(`https://t.me/${contact.slice(1)}?text=${encodeURIComponent(message)}`, '_blank');
+            } else {
+                window.open(`https://wa.me/${contact}?text=${encodeURIComponent(message)}`, '_blank');
+            }
+        }
+
+        function handleResponse(responseType) {
+            const params = getQueryParams();
+            if (!params) return;
+
+            let message;
+            if (responseType === 'yes') {
+                message = params.yesResponse;
+            } else {
+                message = params.noResponse;
+            }
+
+            alert(message);
+
+            const reportMessage = `Saya menjawab "${responseType === 'yes' ? 'Yes' : 'No'}" untuk pertanyaanmu: "${params.question}"`;
+            if (params.contact.startsWith('@')) {
+                sendMessage('telegram', params.contact, reportMessage);
+            } else {
+                sendMessage('whatsapp', params.contact, reportMessage);
+            }
+        }
+
+        window.onload = function() {
+            const params = getQueryParams();
+            if (params) {
+                document.querySelector('.container').classList.add('hidden');
+                document.getElementById('senderMessage').textContent = `Ada pesan dari ${params.senderName}:`;
+                document.getElementById('generatedQuestion').textContent = params.question;
+                document.getElementById('resultContainer').classList.remove('hidden');
+            }
+        }
+    </script>
+</body>
+  </html>
+  
