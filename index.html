@@ -69,10 +69,10 @@
     <div class="container">
         <h1>Answer This</h1>
         <input type="text" id="senderName" placeholder="Nama Anda" required>
-        <input type="text" id="contact" placeholder="Nomor WA atau Username Telegram" required>
-        <input type="text" id="question" placeholder="Pertanyaan" required>
-        <input type="text" id="yesResponse" placeholder="Pesan Yes" required>
-        <input type="text" id="noResponse" placeholder="Pesan No" required>
+        <input type="text" id="contact" placeholder="ex: 62831... atau @balabala" required>
+        <input type="text" id="question" placeholder="ex: mau ga jadi pacarku?" required>
+        <input type="text" id="yesResponse" placeholder="yes ex: yey kita jadian" required>
+        <input type="text" id="noResponse" placeholder="no ex: yah nt" required>
         <button onclick="generateLink()">Generate Link</button>
         <div id="linkContainer" class="hidden">
             <p id="message"></p>
@@ -89,7 +89,7 @@
         </div>
     </div>
     <footer>
-        Made with by Aldo
+      <center> <p> Made with by <a href="https://instagram.com/rifaldo.dev">Aldo </a></p> </center>
         <button onclick="window.location.href='index.html'">Buat Versi Kamu</button>
     </footer>
     <script>
@@ -167,7 +167,7 @@
                 }
             }
 
-            const reportMessage = `Saya menjawab "${responseType === 'yes' ? 'Yes' : 'No'}" untuk pertanyaanmu: "${params.question}"`;
+            const reportMessage = `Saya menjawab "${responseType === 'yes' ? 'Yes' : 'No'}" untuk pertanyaanmu: "${params.question}" buat versi kamu di  https://dijawabya-pertanyaan-ini.vercel.app/`;
             if (params.contact.startsWith('@')) {
                 sendMessage('telegram', params.contact, reportMessage);
             } else {
